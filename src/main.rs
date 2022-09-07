@@ -13,6 +13,8 @@ use map::*;
 mod player;
 use player::*;
 
+mod rect;
+use rect::*;
 
 // Main Function
 fn main() -> rltk::BError {
@@ -37,19 +39,7 @@ fn main() -> rltk::BError {
         .with(Player {})
         .build();
 
-    for i in 0..10 {
-        gs.ecs
-            .create_entity()
-            .with(Position { x: i * 7, y: 20 })
-            .with(Renderable {
-                glyph: rltk::to_cp437('@'),
-                fg: RGB::named(rltk::RED),
-                bg: RGB::named(rltk::BLACK),
-            })
-            .build();
-    }
-
-    gs.ecs.insert(new_map());
+    gs.ecs.insert(new_map_rooms_and_corridors());
 
     rltk::main_loop(context, gs)
 }

@@ -3,8 +3,8 @@ use specs::prelude::*;
 use std::cmp::{max, min};
 
 use crate::State;
+use crate::{xy_idx, TileType, MAPHEIGHT, MAPWIDTH};
 use crate::{Player, Position};
-use crate::{xy_idx, MAPHEIGHT, MAPWIDTH, TileType};
 
 pub fn try_move_player(dx: i32, dy: i32, ecs: &mut World) {
     let mut positions = ecs.write_storage::<Position>();

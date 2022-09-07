@@ -1,8 +1,8 @@
 use rltk::{GameState, Rltk};
 use specs::prelude::*;
 
-use crate::{draw_map, TileType};
 use crate::player_input;
+use crate::{draw_map, TileType};
 use crate::{Position, Renderable};
 
 pub struct State {
