@@ -1,4 +1,4 @@
-use rltk::{GameState, Rltk, VirtualKeyCode, RGB};
+use rltk::{GameState, Rltk, VirtualKeyCode, RGB, Tile};
 use specs::prelude::*;
 use specs_derive::Component;
 use std::cmp::{max, min};
@@ -108,10 +108,14 @@ impl<'a> System<'a> for LeftWalker {
 fn try_move_player(dx: i32, dy: i32, ecs: &mut World) {
     let mut positions = ecs.write_storage::<Position>();
     let players = ecs.read_storage::<Player>();
+    let map = ecs.fetch::<Vec<TileType>>();
 
     for (_, pos) in (&players, &mut positions).join() {
-        pos.x = min(MAPWIDTH as i32 - 1, max(0, pos.x + dx));
-        pos.y = min(MAPHEIGHT as i32 - 1, max(0, pos.y + dy));
+        let dest = xy_idx(pos.x + dx, pos.y + dy);
+        if map[dest] != TileType::Wall {
+            pos.x = min(MAPWIDTH as i32 - 1, max(0, pos.x + dx));
+            pos.y = min(MAPHEIGHT as i32 - 1, max(0, pos.y + dy));
+        }
     }
 }
 
