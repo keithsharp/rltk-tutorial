@@ -1,7 +1,9 @@
-use rltk::{RandomNumberGenerator, Rltk, RGB};
+use rltk::{Algorithm2D, BaseMap, Point, RandomNumberGenerator, Rltk, RGB};
+use specs::prelude::*;
 use std::cmp::{max, min};
 
 use crate::Rect;
+use crate::{Player, Viewshed};
 
 const MAP_WIDTH: i32 = 80;
 const MAP_HEIGHT: i32 = 50;
@@ -103,28 +105,48 @@ impl Map {
         }
     }
 
-    pub fn draw(&self, ctx: &mut Rltk) {
-        let mut x = 0;
-        let mut y = 0;
+    pub fn draw(&self, ecs: &World, ctx: &mut Rltk) {
+        let mut viewsheds = ecs.write_storage::<Viewshed>();
+        let mut players = ecs.write_storage::<Player>();
 
         let grey = RGB::from_f32(0.5, 0.5, 0.5);
         let green = RGB::from_f32(0.0, 1.0, 0.0);
 
-        for tile in self.tiles.iter() {
-            match tile {
-                TileType::Floor => {
-                    ctx.set(x, y, grey, rltk::BLACK, rltk::to_cp437('.'));
-                }
-                TileType::Wall => {
-                    ctx.set(x, y, green, rltk::BLACK, rltk::to_cp437('#'));
-                }
-            }
+        for (_, viewshed) in (&mut players, &mut viewsheds).join() {
+            let mut x = 0;
+            let mut y = 0;
 
-            x += 1;
-            if x > self.width as i32 - 1 {
-                x = 0;
-                y += 1;
+            for tile in self.tiles.iter() {
+                let point = Point::new(x, y);
+                if viewshed.visible_tiles.contains(&point) {
+                    match tile {
+                        TileType::Floor => {
+                            ctx.set(x, y, grey, rltk::BLACK, rltk::to_cp437('.'));
+                        }
+                        TileType::Wall => {
+                            ctx.set(x, y, green, rltk::BLACK, rltk::to_cp437('#'));
+                        }
+                    }
+                }
+
+                x += 1;
+                if x > self.width as i32 - 1 {
+                    x = 0;
+                    y += 1;
+                }
             }
         }
+    }
+}
+
+impl BaseMap for Map {
+    fn is_opaque(&self, idx: usize) -> bool {
+        self.tiles[idx] == TileType::Wall
+    }
+}
+
+impl Algorithm2D for Map {
+    fn dimensions(&self) -> rltk::Point {
+        Point::new(self.width, self.height)
     }
 }

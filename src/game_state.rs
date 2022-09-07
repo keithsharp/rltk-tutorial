@@ -3,6 +3,7 @@ use specs::prelude::*;
 
 use crate::player_input;
 use crate::Map;
+use crate::VisibilitySystem;
 use crate::{Position, Renderable};
 
 pub struct State {
@@ -17,7 +18,7 @@ impl GameState for State {
         ctx.cls();
 
         let map = self.ecs.fetch::<Map>();
-        map.draw(ctx);
+        map.draw(&self.ecs, ctx);
 
         let positions = self.ecs.read_storage::<Position>();
         let renderables = self.ecs.read_storage::<Renderable>();
@@ -30,6 +31,8 @@ impl GameState for State {
 
 impl State {
     fn run_systems(&mut self) {
+        let mut vis = VisibilitySystem {};
+        vis.run_now(&self.ecs);
         self.ecs.maintain();
     }
 }
