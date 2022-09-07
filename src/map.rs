@@ -7,7 +7,7 @@ use crate::Rect;
 pub const MAPWIDTH: usize = 80;
 pub const MAPHEIGHT: usize = 50;
 
-#[derive(PartialEq, Copy, Clone)]
+#[derive(PartialEq, Eq, Copy, Clone)]
 pub enum TileType {
     Wall,
     Floor,
