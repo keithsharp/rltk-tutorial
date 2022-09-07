@@ -3,6 +3,71 @@ use specs::prelude::*;
 use specs_derive::Component;
 use std::cmp::{max, min};
 
+// Map
+const MAPWIDTH: usize = 80;
+const MAPHEIGHT: usize = 50;
+
+#[derive(PartialEq, Copy, Clone)]
+enum TileType  {
+    Wall,
+    Floor,
+}
+
+fn xy_idx(x: i32, y: i32) -> usize {
+    (y as usize * MAPWIDTH) + x as usize
+}
+
+fn new_map() -> Vec<TileType> {
+    let mut map = vec![TileType::Floor; MAPWIDTH * MAPHEIGHT];
+    
+    for x in 0..MAPWIDTH as i32 {
+        map[xy_idx(x, 0)] = TileType::Wall;
+        map[xy_idx(x, MAPHEIGHT as i32 - 1)] = TileType::Wall;
+    }
+    for y in 0..MAPHEIGHT as i32 {
+        map[xy_idx(0, y)] = TileType::Wall;
+        map[xy_idx(MAPWIDTH as i32 - 1, y)] = TileType::Wall;
+    }
+
+    let mut rng = rltk::RandomNumberGenerator::new();
+    for _ in 0..400 {
+        let x = rng.roll_dice(1, MAPWIDTH as i32 - 1);
+        let y = rng.roll_dice(1, MAPHEIGHT as i32 - 1);
+
+        let idx = xy_idx(x, y);
+        if idx != xy_idx(40, 25) {
+            map[idx] = TileType::Wall;
+        }
+    }
+
+    map
+}
+
+fn draw_map(map: &[TileType], ctx: &mut Rltk) {
+    let mut x = 0;
+    let mut y = 0;
+
+    let grey = RGB::from_f32(0.5, 0.5, 0.5);
+    let green = RGB::from_f32(0.0, 1.0, 0.0);
+
+    for tile in map.iter() {
+        match tile {
+            TileType::Floor => {
+                ctx.set(x, y, grey, rltk::BLACK, rltk::to_cp437('.'));
+            },
+            TileType::Wall => {
+                ctx.set(x, y, green, rltk::BLACK, rltk::to_cp437('#'));
+            },
+        }
+
+        x += 1;
+        if x > MAPWIDTH as i32 - 1 {
+            x = 0;
+            y += 1;
+        }
+    }
+}
+
 // Components
 #[derive(Component)]
 struct Position {
@@ -33,7 +98,7 @@ impl<'a> System<'a> for LeftWalker {
         for (_, mut pos) in (&lefty, &mut pos).join() {
             pos.x -= 1;
             if pos.x < 0 {
-                pos.x = 79;
+                pos.x = MAPWIDTH as i32 - 1;
             }
         }
     }
@@ -45,8 +110,8 @@ fn try_move_player(dx: i32, dy: i32, ecs: &mut World) {
     let players = ecs.read_storage::<Player>();
 
     for (_, pos) in (&players, &mut positions).join() {
-        pos.x = min(79, max(0, pos.x + dx));
-        pos.y = min(49, max(0, pos.y + dy));
+        pos.x = min(MAPWIDTH as i32 - 1, max(0, pos.x + dx));
+        pos.y = min(MAPHEIGHT as i32 - 1, max(0, pos.y + dy));
     }
 }
 
@@ -73,6 +138,9 @@ impl GameState for State {
         self.run_systems();
 
         ctx.cls();
+
+        let map = self.ecs.fetch::<Vec<TileType>>();
+        draw_map(&map, ctx);
 
         let positions = self.ecs.read_storage::<Position>();
         let renderables = self.ecs.read_storage::<Renderable>();
@@ -127,6 +195,8 @@ fn main() -> rltk::BError {
             .with(LeftMover {})
             .build();
     }
+
+    gs.ecs.insert(new_map());
 
     rltk::main_loop(context, gs)
 }
