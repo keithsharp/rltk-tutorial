@@ -2,7 +2,7 @@ use rltk::{GameState, Rltk};
 use specs::prelude::*;
 
 use crate::player_input;
-use crate::{draw_map, TileType};
+use crate::Map;
 use crate::{Position, Renderable};
 
 pub struct State {
@@ -16,8 +16,8 @@ impl GameState for State {
 
         ctx.cls();
 
-        let map = self.ecs.fetch::<Vec<TileType>>();
-        draw_map(&map, ctx);
+        let map = self.ecs.fetch::<Map>();
+        map.draw(ctx);
 
         let positions = self.ecs.read_storage::<Position>();
         let renderables = self.ecs.read_storage::<Renderable>();
