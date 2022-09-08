@@ -52,6 +52,7 @@ fn main() -> rltk::BError {
         .with(Viewshed {
             visible_tiles: Vec::new(),
             range: PLAYER_VIEW_RANGE,
+            dirty: true,
         })
         .build();
 

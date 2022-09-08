@@ -22,6 +22,7 @@ pub struct Map {
     pub width: i32,
     pub height: i32,
     pub revealed_tiles: Vec<bool>,
+    pub visible_tiles: Vec<bool>,
 }
 
 impl Map {
@@ -32,6 +33,7 @@ impl Map {
             width: MAP_WIDTH,
             height: MAP_HEIGHT,
             revealed_tiles: vec![false; (MAP_WIDTH * MAP_HEIGHT) as usize],
+            visible_tiles: vec![false; (MAP_WIDTH * MAP_HEIGHT) as usize],
         };
 
         let mut rng = RandomNumberGenerator::new();
@@ -114,14 +116,14 @@ impl Map {
 
         for (idx, tile) in self.tiles.iter().enumerate() {
             if self.revealed_tiles[idx] {
-                match tile {
-                    TileType::Floor => {
-                        ctx.set(x, y, grey, rltk::BLACK, rltk::to_cp437('.'));
-                    }
-                    TileType::Wall => {
-                        ctx.set(x, y, green, rltk::BLACK, rltk::to_cp437('#'));
-                    }
+                let (glyph, mut fg) = match tile {
+                    TileType::Floor => (rltk::to_cp437('.'), grey),
+                    TileType::Wall => (rltk::to_cp437('#'), green),
+                };
+                if !self.visible_tiles[idx] {
+                    fg = fg.to_greyscale();
                 }
+                ctx.set(x, y, fg, rltk::BLACK, glyph);
             }
 
             x += 1;
