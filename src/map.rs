@@ -1,9 +1,7 @@
 use rltk::{Algorithm2D, BaseMap, Point, RandomNumberGenerator, Rltk, RGB};
-use specs::prelude::*;
 use std::cmp::{max, min};
 
 use crate::Rect;
-use crate::{Player, Viewshed};
 
 const MAP_WIDTH: i32 = 80;
 const MAP_HEIGHT: i32 = 50;
@@ -23,6 +21,7 @@ pub struct Map {
     pub rooms: Vec<Rect>,
     pub width: i32,
     pub height: i32,
+    pub revealed_tiles: Vec<bool>,
 }
 
 impl Map {
@@ -32,6 +31,7 @@ impl Map {
             rooms: Vec::new(),
             width: MAP_WIDTH,
             height: MAP_HEIGHT,
+            revealed_tiles: vec![false; (MAP_WIDTH * MAP_HEIGHT) as usize],
         };
 
         let mut rng = RandomNumberGenerator::new();
@@ -105,35 +105,29 @@ impl Map {
         }
     }
 
-    pub fn draw(&self, ecs: &World, ctx: &mut Rltk) {
-        let mut viewsheds = ecs.write_storage::<Viewshed>();
-        let mut players = ecs.write_storage::<Player>();
-
+    pub fn draw(&self, ctx: &mut Rltk) {
         let grey = RGB::from_f32(0.5, 0.5, 0.5);
         let green = RGB::from_f32(0.0, 1.0, 0.0);
 
-        for (_, viewshed) in (&mut players, &mut viewsheds).join() {
-            let mut x = 0;
-            let mut y = 0;
+        let mut x = 0;
+        let mut y = 0;
 
-            for tile in self.tiles.iter() {
-                let point = Point::new(x, y);
-                if viewshed.visible_tiles.contains(&point) {
-                    match tile {
-                        TileType::Floor => {
-                            ctx.set(x, y, grey, rltk::BLACK, rltk::to_cp437('.'));
-                        }
-                        TileType::Wall => {
-                            ctx.set(x, y, green, rltk::BLACK, rltk::to_cp437('#'));
-                        }
+        for (idx, tile) in self.tiles.iter().enumerate() {
+            if self.revealed_tiles[idx] {
+                match tile {
+                    TileType::Floor => {
+                        ctx.set(x, y, grey, rltk::BLACK, rltk::to_cp437('.'));
+                    }
+                    TileType::Wall => {
+                        ctx.set(x, y, green, rltk::BLACK, rltk::to_cp437('#'));
                     }
                 }
+            }
 
-                x += 1;
-                if x > self.width as i32 - 1 {
-                    x = 0;
-                    y += 1;
-                }
+            x += 1;
+            if x > self.width as i32 - 1 {
+                x = 0;
+                y += 1;
             }
         }
     }
