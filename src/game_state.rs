@@ -3,17 +3,29 @@ use specs::prelude::*;
 
 use crate::player_input;
 use crate::Map;
+use crate::MonsterAiSystem;
 use crate::VisibilitySystem;
 use crate::{Position, Renderable};
 
+#[derive(PartialEq, Eq, Clone, Copy)]
+pub enum RunState {
+    Paused,
+    Running,
+}
+
 pub struct State {
     pub ecs: World,
+    pub runstate: RunState,
 }
 
 impl GameState for State {
     fn tick(&mut self, ctx: &mut Rltk) {
-        player_input(self, ctx);
-        self.run_systems();
+        if self.runstate == RunState::Running {
+            self.run_systems();
+            self.runstate = RunState::Paused
+        } else {
+            self.runstate = player_input(self, ctx);
+        }
 
         ctx.cls();
 
@@ -37,6 +49,10 @@ impl State {
     fn run_systems(&mut self) {
         let mut vis = VisibilitySystem {};
         vis.run_now(&self.ecs);
+
+        let mut mob = MonsterAiSystem {};
+        mob.run_now(&self.ecs);
+
         self.ecs.maintain();
     }
 }

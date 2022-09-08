@@ -2,6 +2,9 @@ use specs::prelude::*;
 use specs_derive::Component;
 
 #[derive(Component)]
+pub struct Monster {}
+
+#[derive(Component)]
 pub struct Player {}
 
 #[derive(Component)]

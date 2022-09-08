@@ -1,11 +1,11 @@
-use rltk::{Rltk, VirtualKeyCode};
+use rltk::{Point, Rltk, VirtualKeyCode};
 use specs::prelude::*;
 use std::cmp::{max, min};
 
 use crate::components::Viewshed;
-use crate::State;
 use crate::{Map, TileType};
 use crate::{Player, Position};
+use crate::{RunState, State};
 
 pub fn try_move_player(dx: i32, dy: i32, ecs: &mut World) {
     let mut positions = ecs.write_storage::<Position>();
@@ -19,12 +19,16 @@ pub fn try_move_player(dx: i32, dy: i32, ecs: &mut World) {
             pos.x = min(map.width - 1, max(0, pos.x + dx));
             pos.y = min(map.height - 1, max(0, pos.y + dy));
 
+            let mut ppos = ecs.write_resource::<Point>();
+            ppos.x = pos.x;
+            ppos.y = pos.y;
+
             viewshed.dirty = true;
         }
     }
 }
 
-pub fn player_input(gs: &mut State, ctx: &mut Rltk) {
+pub fn player_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
     if let Some(key) = ctx.key {
         match key {
             VirtualKeyCode::Left | VirtualKeyCode::Numpad4 | VirtualKeyCode::H => {
@@ -39,7 +43,10 @@ pub fn player_input(gs: &mut State, ctx: &mut Rltk) {
             VirtualKeyCode::Down | VirtualKeyCode::Numpad2 | VirtualKeyCode::J => {
                 try_move_player(0, 1, &mut gs.ecs)
             }
-            _ => {}
+            _ => return RunState::Paused,
         }
+    } else {
+        return RunState::Paused;
     }
+    RunState::Running
 }

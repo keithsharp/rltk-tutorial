@@ -1,4 +1,4 @@
-use rltk::RGB;
+use rltk::{Point, RGB};
 use specs::prelude::*;
 
 mod components;
@@ -9,6 +9,9 @@ use game_state::*;
 
 mod map;
 use map::*;
+
+mod monster_ai_system;
+use monster_ai_system::*;
 
 mod player;
 use player::*;
@@ -29,7 +32,11 @@ fn main() -> rltk::BError {
         .with_title("Roguelike Tutorial")
         .build()?;
 
-    let mut gs = State { ecs: World::new() };
+    let mut gs = State {
+        ecs: World::new(),
+        runstate: RunState::Running,
+    };
+    gs.ecs.register::<Monster>();
     gs.ecs.register::<Player>();
     gs.ecs.register::<Position>();
     gs.ecs.register::<Renderable>();
@@ -59,6 +66,7 @@ fn main() -> rltk::BError {
                 range: MONSTER_VIEW_RANGE,
                 dirty: true,
             })
+            .with(Monster {})
             .build();
     }
 
@@ -80,6 +88,7 @@ fn main() -> rltk::BError {
             dirty: true,
         })
         .build();
+    gs.ecs.insert(Point::new(player_x, player_y));
 
     gs.ecs.insert(map);
 
