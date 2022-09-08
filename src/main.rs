@@ -20,6 +20,7 @@ mod visibility_system;
 use visibility_system::*;
 
 const PLAYER_VIEW_RANGE: i32 = 8;
+const MONSTER_VIEW_RANGE: i32 = 8;
 
 // Main Function
 fn main() -> rltk::BError {
@@ -36,6 +37,30 @@ fn main() -> rltk::BError {
 
     let map = Map::new_map_rooms_and_corridors();
     let (player_x, player_y) = map.rooms[0].center();
+
+    let mut rng = rltk::RandomNumberGenerator::new();
+    for room in map.rooms.iter().skip(1) {
+        let (x, y) = room.center();
+        let glyph = match rng.roll_dice(1, 2) {
+            1 => rltk::to_cp437('g'),
+            _ => rltk::to_cp437('o'),
+        };
+
+        gs.ecs
+            .create_entity()
+            .with(Position { x, y })
+            .with(Renderable {
+                glyph,
+                fg: RGB::named(rltk::RED),
+                bg: RGB::named(rltk::BLACK),
+            })
+            .with(Viewshed {
+                visible_tiles: Vec::new(),
+                range: MONSTER_VIEW_RANGE,
+                dirty: true,
+            })
+            .build();
+    }
 
     gs.ecs
         .create_entity()
