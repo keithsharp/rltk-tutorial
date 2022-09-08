@@ -14,7 +14,7 @@ pub fn try_move_player(dx: i32, dy: i32, ecs: &mut World) {
     let map = ecs.fetch::<Map>();
 
     for (_, pos, viewshed) in (&players, &mut positions, &mut viewsheds).join() {
-        let dest = map.xy_idx(pos.x + dx, pos.y + dy);
+        let dest = map.xy_to_idx(pos.x + dx, pos.y + dy);
         if map.tiles[dest] != TileType::Wall {
             pos.x = min(map.width - 1, max(0, pos.x + dx));
             pos.y = min(map.height - 1, max(0, pos.y + dy));
